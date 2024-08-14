@@ -1,0 +1,384 @@
+---
+title: "Guiding supervisors in AI forecasting"
+output: html_notebook
+---
+## Experiment 2
+
+```{r}
+# reading data- experiment 2- part T1 and T2
+library(readr)
+exp2_t12 <- read.csv("experiment2_T1T2.csv")
+nrow(exp2_t12)
+ncol(exp2_t12)
+head(exp2_t12)
+```
+
+```{r}
+library(dplyr)
+exp2_t12 <- filter(exp2_t12, test_round==0)
+nrow(exp2_t12)
+```
+
+```{r}
+exp2_t12$participant_id <- as.factor(exp2_t12$participant_id)
+exp2_t12$code <- as.factor(exp2_t12$code)
+
+exp2_t12$PQ1 <- as.factor(exp2_t12$PQ1)
+exp2_t12$PQ2 <- as.factor(exp2_t12$PQ2)
+exp2_t12$PQ3 <- as.factor(exp2_t12$PQ3)
+exp2_t12$PQ4 <- as.factor(exp2_t12$PQ4)
+exp2_t12$PQ6 <- as.factor(exp2_t12$PQ6)
+exp2_t12$PQ7 <- as.factor(exp2_t12$PQ7)
+exp2_t12$PQ8 <- as.factor(exp2_t12$PQ8)
+exp2_t12$PQ9 <- as.factor(exp2_t12$PQ9)
+exp2_t12$PQ10 <- as.factor(exp2_t12$PQ10)
+
+exp2_t12$comp_skill <- as.factor(exp2_t12$comp_skill)
+exp2_t12$forecasting_skill <- as.factor(exp2_t12$forecasting_skill)
+
+exp2_t12$page <- as.factor(exp2_t12$page)
+exp2_t12$round <- as.factor(exp2_t12$round)
+
+exp2_t12$select_human <- as.factor(exp2_t12$select_human)
+
+exp2_t12$pos_dir <- as.factor(exp2_t12$pos_dir)
+exp2_t12$large_mag <- as.factor(exp2_t12$large_mag)
+exp2_t12$sort_num <- as.factor(exp2_t12$sort_num)
+exp2_t12$value <- as.factor(exp2_t12$value)
+exp2_t12$h_AI_samedev <- as.factor(exp2_t12$h_AI_samedev)
+exp2_t12$closer_to_mean <- as.factor(exp2_t12$closer_to_mean)
+
+exp2_t12$earlier_rounds <- as.factor(exp2_t12$earlier_rounds)
+exp2_t12$later_rounds <- as.factor(exp2_t12$later_rounds)
+exp2_t12$directly_after_feedback <- as.factor(exp2_t12$directly_after_feedback)
+exp2_t12$h_closer_tomean <- as.factor(exp2_t12$h_closer_tomean)
+
+exp2_t12$guidance_followed_cat <- as.factor(exp2_t12$guidance_followed)
+```
+
+```{r}
+prop.table(table(exp2_t12$select_human))
+```
+
+```{r}
+# experiment 2- Part T1 and T2
+prop.table(table(exp2_t12$gender))*100
+prop.table(table(exp2_t12$education))*100
+summary(exp2_t12$age)
+prop.table(table(exp2_t12$work_status))*100
+prop.table(table(exp2_t12$comp_skill))*100
+prop.table(table(exp2_t12$forecasting_skill))*100
+prop.table(table(exp2_t12$similar_exp))*100
+```
+
+
+```{r}
+exp2_t12_pay <- exp2_t12 %>% group_by(participant_id) %>% summarize(payoff_tpp= sum(payoff)/48)
+
+mean(exp2_t12_pay$payoff_tpp)
+sd(exp2_t12_pay$payoff_tpp)
+```
+
+```{r}
+tr1_weak <- filter(exp2_t12, tr== 60)
+tr2_strong <- filter(exp2_t12, tr== 70)
+```
+
+```{r}
+tr1_weak_pay <- tr1_weak %>% group_by(participant_id) %>% summarize(payoff_tpp= sum(payoff)/48)
+
+mean(tr1_weak_pay$payoff_tpp)
+sd(tr1_weak_pay$payoff_tpp)
+```
+
+```{r}
+shapiro.test(tr1_weak_pay$payoff_tpp)
+```
+
+```{r}
+tr2_strong_pay <- tr2_strong %>% group_by(participant_id) %>% summarize(payoff_tpp= sum(payoff)/48)
+
+mean(tr2_strong_pay$payoff_tpp)
+sd(tr2_strong_pay$payoff_tpp)
+```
+
+```{r}
+shapiro.test(tr2_strong_pay$payoff_tpp)
+```
+
+```{r}
+wilcox.test(tr1_weak_pay$payoff_tpp, tr2_strong_pay$payoff_tpp)
+```
+
+in line with the second paragraph section 4-6
+
+## logistinc regression
+
+### treatment 1
+
+```{r}
+tr1_weak_m <- select(tr1_weak, c("participant_id", "PQ1", "PQ2", "PQ3", "PQ4", "PQ6", "PQ7", "PQ8", "PQ9", "PQ10", "age", "gender", "education", "work_status", "comp_skill", "forecasting_skill", "similar_exp", "tinst_ttot", "select_human", "pos_dir", "large_mag", "closer_to_mean", "adj_vs_mean", "adj_vs_AI", "earlier_rounds", "later_rounds", "directly_after_feedback", "h_closer_tomean", "guidance_followed", "guidance_followed_cat"))
+```
+
+
+```{r}
+model0_tr1_weak <- glm(select_human~ h_closer_tomean + adj_vs_AI+ earlier_rounds+ later_rounds+ directly_after_feedback+ large_mag* pos_dir, data=tr1_weak_m, family= binomial(link="logit"))
+summary(model0_tr1_weak)
+```
+
+### treatment 2
+```{r}
+tr2_strong_m <- select(tr2_strong, c("participant_id", "PQ1", "PQ2", "PQ3", "PQ4", "PQ6", "PQ7", "PQ8", "PQ9", "PQ10", "age", "gender", "education", "work_status", "comp_skill", "forecasting_skill", "similar_exp", "tinst_ttot", "select_human", "pos_dir", "large_mag", "closer_to_mean", "adj_vs_mean", "adj_vs_AI", "earlier_rounds", "later_rounds", "directly_after_feedback", "h_closer_tomean", "guidance_followed"))
+```
+
+```{r}
+model0_tr2_strong <- glm(select_human~ h_closer_tomean + adj_vs_AI+ earlier_rounds+ later_rounds+ directly_after_feedback+ large_mag* pos_dir, data=tr2_strong_m, family= binomial(link="logit"))
+summary(model0_tr2_strong)
+```
+
+```{r}
+# reading data- experiment 2- part T3 and T4
+library(readr)
+exp2_t34 <- read.csv("experiment2_T3T4.csv")
+nrow(exp2_t34)
+ncol(exp2_t34)
+head(exp2_t34)
+```
+
+```{r}
+library(dplyr)
+exp2_t34 <- filter(exp2_t34, test_round==0)
+nrow(exp2_t34)
+```
+
+```{r}
+exp2_t34$participant_id <- as.factor(exp2_t34$participant_id)
+exp2_t34$code <- as.factor(exp2_t34$code)
+
+exp2_t34$PQ1 <- as.factor(exp2_t34$PQ1)
+exp2_t34$PQ2 <- as.factor(exp2_t34$PQ2)
+exp2_t34$PQ3 <- as.factor(exp2_t34$PQ3)
+exp2_t34$PQ4 <- as.factor(exp2_t34$PQ4)
+exp2_t34$PQ6 <- as.factor(exp2_t34$PQ6)
+exp2_t34$PQ7 <- as.factor(exp2_t34$PQ7)
+exp2_t34$PQ8 <- as.factor(exp2_t34$PQ8)
+exp2_t34$PQ9 <- as.factor(exp2_t34$PQ9)
+exp2_t34$PQ10 <- as.factor(exp2_t34$PQ10)
+
+exp2_t34$comp_skill <- as.factor(exp2_t34$comp_skill)
+exp2_t34$forecasting_skill <- as.factor(exp2_t34$forecasting_skill)
+
+exp2_t34$page <- as.factor(exp2_t34$page)
+exp2_t34$round <- as.factor(exp2_t34$round)
+
+exp2_t34$select_human <- as.factor(exp2_t34$select_human)
+
+exp2_t34$pos_dir <- as.factor(exp2_t34$pos_dir)
+exp2_t34$large_mag <- as.factor(exp2_t34$large_mag)
+exp2_t34$sort_num <- as.factor(exp2_t34$sort_num)
+exp2_t34$value <- as.factor(exp2_t34$value)
+exp2_t34$h_AI_samedev <- as.factor(exp2_t34$h_AI_samedev)
+exp2_t34$closer_to_mean <- as.factor(exp2_t34$closer_to_mean)
+
+exp2_t34$earlier_rounds <- as.factor(exp2_t34$earlier_rounds)
+exp2_t34$later_rounds <- as.factor(exp2_t34$later_rounds)
+exp2_t34$directly_after_feedback <- as.factor(exp2_t34$directly_after_feedback)
+exp2_t34$h_closer_tomean <- as.factor(exp2_t34$h_closer_tomean)
+
+exp2_t34$guidance_followed_cat <- as.factor(exp2_t34$guidance_followed)
+```
+
+
+```{r}
+prop.table(table(exp2_t34$select_human))
+```
+
+```{r}
+# experiment 2- Part T1 and T2
+prop.table(table(exp2_t34$gender))*100
+prop.table(table(exp2_t34$education))*100
+summary(exp2_t12$age)
+prop.table(table(exp2_t34$work_status))*100
+prop.table(table(exp2_t34$comp_skill))*100
+prop.table(table(exp2_t34$forecasting_skill))*100
+prop.table(table(exp2_t34$similar_exp))*100
+```
+
+
+```{r}
+exp2_t34_pay <- exp2_t34 %>% group_by(participant_id) %>% summarize(payoff_tpp= sum(payoff)/48)
+
+mean(exp2_t34_pay$payoff_tpp)
+sd(exp2_t34_pay$payoff_tpp)
+```
+
+```{r}
+tr3_weak <- filter(exp2_t34, tr== 60)
+tr4_strong <- filter(exp2_t34, tr== 70)
+```
+
+```{r}
+tr3_weak_pay <- tr3_weak %>% group_by(participant_id) %>% summarize(payoff_tpp= sum(payoff)/48)
+
+mean(tr3_weak_pay$payoff_tpp)
+sd(tr3_weak_pay$payoff_tpp)
+```
+
+```{r}
+shapiro.test(tr3_weak_pay$payoff_tpp)
+```
+
+```{r}
+tr4_strong_pay <- tr4_strong %>% group_by(participant_id) %>% summarize(payoff_tpp= sum(payoff)/48)
+
+mean(tr4_strong_pay$payoff_tpp)
+sd(tr4_strong_pay$payoff_tpp)
+```
+
+```{r}
+shapiro.test(tr4_strong_pay$payoff_tpp)
+```
+
+```{r}
+wilcox.test(tr3_weak_pay$payoff_tpp, tr4_strong_pay$payoff_tpp)
+```
+
+in line with the second paragraph section 4-6
+
+## logistinc regression
+
+### treatment 3
+```{r}
+tr3_weak_m <- select(tr3_weak, c("participant_id", "PQ1", "PQ2", "PQ3", "PQ4", "PQ6", "PQ7", "PQ8", "PQ9", "PQ10", "age", "gender", "education", "work_status", "comp_skill", "forecasting_skill", "similar_exp", "tinst_ttot", "select_human", "pos_dir", "large_mag", "closer_to_mean", "adj_vs_mean", "adj_vs_AI", "earlier_rounds", "later_rounds", "directly_after_feedback", "h_closer_tomean", "guidance_followed", "guidance_followed_cat"))
+```
+
+
+```{r}
+model0_tr3_weak <- glm(select_human~ h_closer_tomean + adj_vs_AI+ earlier_rounds+ later_rounds+ directly_after_feedback+ large_mag* pos_dir, data=tr3_weak_m, family= binomial(link="logit"))
+summary(model0_tr3_weak)
+```
+
+### treatment 4
+```{r}
+tr4_strong_m <- select(tr4_strong, c("participant_id", "PQ1", "PQ2", "PQ3", "PQ4", "PQ6", "PQ7", "PQ8", "PQ9", "PQ10", "age", "gender", "education", "work_status", "comp_skill", "forecasting_skill", "similar_exp", "tinst_ttot", "select_human", "pos_dir", "large_mag", "closer_to_mean", "adj_vs_mean", "adj_vs_AI", "earlier_rounds", "later_rounds", "directly_after_feedback", "h_closer_tomean", "guidance_followed"))
+```
+
+```{r}
+model0_tr4_strong <- glm(select_human~ h_closer_tomean + adj_vs_AI+ earlier_rounds+ later_rounds+ directly_after_feedback+ large_mag* pos_dir, data=tr4_strong_m, family= binomial(link="logit"))
+summary(model0_tr4_strong)
+```
+
+### average guidance followed- statistical tests
+```{r}
+# focusing on downward adjusted cases
+tr1_weak_neg <- filter(tr1_weak, pos_dir==0)
+tr2_strong_neg <- filter(tr2_strong, pos_dir==0)
+tr3_weak_neg <- filter(tr3_weak, pos_dir==0)
+tr4_strong_neg <- filter(tr4_strong, pos_dir==0)
+```
+
+```{r}
+tr1_weak_neg_guidancefollowed <- tr1_weak_neg %>% group_by(participant_id) %>% summarize(avg_guidance_followed= sum(guidance_followed==1)/24)
+
+mean(tr1_weak_neg_guidancefollowed$avg_guidance_followed)
+sd(tr1_weak_neg_guidancefollowed$avg_guidance_followed)
+```
+
+```{r}
+tr2_strong_neg_guidancefollowed <- tr2_strong_neg %>% group_by(participant_id) %>% summarize(avg_guidance_followed= sum(guidance_followed==1)/24)
+
+mean(tr2_strong_neg_guidancefollowed$avg_guidance_followed)
+sd(tr2_strong_neg_guidancefollowed$avg_guidance_followed)
+```
+
+```{r}
+tr3_weak_neg_guidancefollowed <- tr3_weak_neg %>% group_by(participant_id) %>% summarize(avg_guidance_followed= sum(guidance_followed==1)/24)
+
+mean(tr3_weak_neg_guidancefollowed$avg_guidance_followed)
+sd(tr3_weak_neg_guidancefollowed$avg_guidance_followed)
+```
+
+```{r}
+tr4_strong_neg_guidancefollowed <- tr4_strong_neg %>% group_by(participant_id) %>% summarize(avg_guidance_followed= sum(guidance_followed==1)/24)
+
+mean(tr4_strong_neg_guidancefollowed$avg_guidance_followed)
+sd(tr4_strong_neg_guidancefollowed$avg_guidance_followed)
+```
+
+```{r}
+shapiro.test(tr1_weak_neg_guidancefollowed$avg_guidance_followed)
+shapiro.test(tr2_strong_neg_guidancefollowed$avg_guidance_followed)
+shapiro.test(tr3_weak_neg_guidancefollowed$avg_guidance_followed)
+shapiro.test(tr4_strong_neg_guidancefollowed$avg_guidance_followed)
+```
+
+```{r}
+wilcox.test(tr1_weak_neg_guidancefollowed$avg_guidance_followed, tr2_strong_neg_guidancefollowed$avg_guidance_followed)
+```
+
+```{r}
+wilcox.test(tr3_weak_neg_guidancefollowed$avg_guidance_followed, tr4_strong_neg_guidancefollowed$avg_guidance_followed)
+```
+
+There is no significant difference between average guidance followed in less and more salient treatments, when the level of detail is fixed.
+
+```{r}
+wilcox.test(tr1_weak_neg_guidancefollowed$avg_guidance_followed, tr3_weak_neg_guidancefollowed$avg_guidance_followed)
+```
+
+```{r}
+wilcox.test(tr2_strong_neg_guidancefollowed$avg_guidance_followed, tr4_strong_neg_guidancefollowed$avg_guidance_followed)
+```
+
+There is a significant difference between less and more detailed treatments, when the guidance is more salient.
+
+### MAE
+```{r}
+# MAE for human adjusted forecast, we presented the same forecasts to all subjects in different treatments, tr1_weak is used here as a sample
+mean(abs(tr1_weak$demand - tr1_weak$human_forecast))
+```
+
+```{r}
+# MAE for AI forecast, we presented the same forecasts to all subjects in different treatments, tr1_weak is used here as a sample
+mean(abs(tr1_weak$demand - tr1_weak$AI_forecast))
+```
+
+To calculate MAE when guidance is fully followed in T1 and T2, we need to first understand the choices. Both T1 and T2 lead subjects to choose all human adjuted forecasts when there is a downward adjustment, and only AI forecast when there is an upward adjustment. This can be achieved easier in excel file of data.
+
+```{r}
+# mae for exp2- T1
+tr1_weak_temp <- tr1_weak
+tr1_weak_temp$ae <- abs(tr1_weak$selected_quant- tr1_weak$demand)
+tr1_weak_mae <- tr1_weak_temp %>% group_by(participant_id) %>% summarize(mae= sum(ae)/48)
+mean(tr1_weak_mae$mae)
+sd(tr1_weak_mae$mae)
+```
+
+```{r}
+# mae for exp2- T2
+tr2_strong_temp <- tr2_strong
+tr2_strong_temp$ae <- abs(tr2_strong$selected_quant- tr2_strong$demand)
+tr2_strong_mae <- tr2_strong_temp %>% group_by(participant_id) %>% summarize(mae= sum(ae)/48)
+mean(tr2_strong_mae$mae)
+sd(tr2_strong_mae$mae)
+```
+
+```{r}
+# mae for exp2- T1
+tr3_weak_temp <- tr3_weak
+tr3_weak_temp$ae <- abs(tr3_weak$selected_quant- tr3_weak$demand)
+tr3_weak_mae <- tr3_weak_temp %>% group_by(participant_id) %>% summarize(mae= sum(ae)/48)
+mean(tr3_weak_mae$mae)
+sd(tr3_weak_mae$mae)
+```
+
+```{r}
+# mae for exp2- T2
+tr4_strong_temp <- tr4_strong
+tr4_strong_temp$ae <- abs(tr4_strong$selected_quant- tr4_strong$demand)
+tr4_strong_mae <- tr4_strong_temp %>% group_by(participant_id) %>% summarize(mae= sum(ae)/48)
+mean(tr4_strong_mae$mae)
+sd(tr4_strong_mae$mae)
+```
+
+

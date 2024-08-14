@@ -1,0 +1,137 @@
+---
+title: "Guiding supervisors in AI forecasting"
+output: html_notebook
+---
+
+# Experiment 1
+
+```{r}
+# reading data
+library(readr)
+exp1 <- read.csv("experiment_1.csv")
+nrow(exp1)
+```
+
+```{r}
+# data overview
+ncol(exp1)
+head(exp1)
+```
+
+```{r}
+library(dplyr)
+exp1 <- filter(exp1, test_round== 0)
+```
+
+```{r}
+# data summary
+summary(exp1)
+```
+
+```{r}
+# categorical features
+exp1$participant_id <- as.factor(exp1$participant_id)
+exp1$code <- as.factor(exp1$code)
+
+exp1$PQ1 <- as.factor(exp1$PQ1)
+exp1$PQ2 <- as.factor(exp1$PQ2)
+exp1$PQ3 <- as.factor(exp1$PQ3)
+exp1$PQ4 <- as.factor(exp1$PQ4)
+exp1$PQ6 <- as.factor(exp1$PQ6)
+exp1$PQ7 <- as.factor(exp1$PQ7)
+exp1$PQ8 <- as.factor(exp1$PQ8)
+exp1$PQ9 <- as.factor(exp1$PQ9)
+exp1$PQ10 <- as.factor(exp1$PQ10)
+
+exp1$comp_skill <- as.factor(exp1$comp_skill)
+exp1$forecasting_skill <- as.factor(exp1$forecasting_skill)
+
+exp1$page <- as.factor(exp1$page)
+exp1$round <- as.factor(exp1$round)
+
+exp1$select_human <- as.factor(exp1$select_human)
+
+exp1$pos_dir <- as.factor(exp1$pos_dir)
+exp1$large_mag <- as.factor(exp1$large_mag)
+exp1$sort_num <- as.factor(exp1$sort_num)
+exp1$value <- as.factor(exp1$value)
+exp1$h_AI_samedev <- as.factor(exp1$h_AI_samedev)
+exp1$closer_to_mean <- as.factor(exp1$closer_to_mean)
+
+exp1$earlier_rounds <- as.factor(exp1$earlier_rounds)
+exp1$later_rounds <- as.factor(exp1$later_rounds)
+exp1$directly_after_feedback <- as.factor(exp1$directly_after_feedback)
+exp1$h_closer_tomean <- as.factor(exp1$h_closer_tomean)
+exp1$twor_after_feedback <- as.factor(exp1$twor_after_feedback)
+```
+
+```{r}
+exp1pay <- exp1 %>% group_by(participant_id) %>% summarize(payoff_tpp= sum(payoff)/48)
+
+mean(exp1pay$payoff_tpp)
+sd(exp1pay$payoff_tpp)
+```
+
+### statistics
+
+```{r}
+prop.table(table(exp1$select_human))
+```
+
+
+```{r}
+prop.table(table(exp1$gender))*100
+```
+
+```{r}
+prop.table(table(exp1$education))*100
+```
+
+```{r}
+summary(exp1$age)
+```
+
+```{r}
+prop.table(table(exp1$work_status))*100
+prop.table(table(exp1$comp_skill))*100
+prop.table(table(exp1$forecasting_skill))*100
+prop.table(table(exp1$similar_exp))*100
+prop.table(table(exp1$closer_to_mean))
+```
+
+### logistic regression model with select_human as dependent variable
+
+```{r}
+exp1_m <- select(exp1, c("participant_id", "PQ1", "PQ2", "PQ3", "PQ4", "PQ6", "PQ7", "PQ8", "PQ9", "PQ10", "age", "gender", "education", "work_status", "comp_skill", "forecasting_skill", "similar_exp", "tinst_ttot", "select_human", "pos_dir", "large_mag", "closer_to_mean", "adj_vs_mean", "adj_vs_AI", "earlier_rounds", "later_rounds", "directly_after_feedback", "h_closer_tomean", "gattitude_AI", "twor_after_feedback"))
+```
+
+```{r}
+model0_exp1 <- glm(select_human~ h_closer_tomean + adj_vs_AI+ earlier_rounds+ later_rounds+ directly_after_feedback+ large_mag+ pos_dir, data=exp1_m, family= binomial(link="logit"))
+summary(model0_exp1)
+```
+
+```{r}
+# to check if the effect persists after two rounds
+model1_exp1 <- glm(select_human~ h_closer_tomean + adj_vs_AI+ earlier_rounds+ later_rounds+ twor_after_feedback+ large_mag+ pos_dir, data=exp1_m, family= binomial(link="logit"))
+summary(model1_exp1)
+```
+
+```{r}
+# number of participants in expl1
+nrow(exp1)/48 #total rounds
+```
+
+```{r}
+# mae for exp1
+exp1$ae <- abs(exp1$selected_quant- exp1$demand)
+exp1mae <- exp1 %>% group_by(round) %>% summarize(mae_round= sum(ae)/67)
+mean(exp1mae$mae_round)
+```
+
+
+
+
+
+
+
+
