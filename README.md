@@ -17,7 +17,7 @@ stats 3.6.0 <br/>
 utils 3.6.0 <br/>
 
 We included the table numbers before the relevant R code, such that you can reproduce the result. <br/>
-Figures are mostly screenshots from OTree experiment (Chen et al., 2016), under otree_experiment_code folder, with specifications as follows: <br/>
+Figures are mostly screenshots from OTree experiment (Chen et al., 2016), zip files, with specifications as follows: <br/>
 otree>=5.0.0a21, <br/>
 psycopg2>=2.8.4, <br/>
 coded with PyCharm, <br/>
