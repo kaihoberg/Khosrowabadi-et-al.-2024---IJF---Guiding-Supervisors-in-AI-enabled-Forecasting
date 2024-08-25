@@ -3,7 +3,7 @@ Understanding the Impact of Salience and Detail on Decision-Making" By Naghmeh K
 
 If you have any question, please feel free to contact the corresponding author, Professor Kai Hoberg at KLU in Hamburg, Germany: kai.hoberg@klu.org
 
-Here is the list of packages we used in R version 3.6.0.
+Here is the list of packages we used in R version 3.6.0. <br/>
 readr 1.3.1
 dplyer 0.8.1
 
